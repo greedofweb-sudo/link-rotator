@@ -2,11 +2,9 @@
  * 🔗 Affiliate Link Rotator
  * 
  * Every N clicks (default: 3), this server:
- * 1. Generates a brand new short link via your chosen API
+ * 1. Generates a brand new short link via Short.io API
  * 2. Instantly redirects all visitors through the current short link
  * 3. Logs every click with timestamp + active short URL
- * 
- * Supports: Short.io, Rebrandly, Bitly (switchable via config)
  */
 
 const http = require("http");
@@ -14,16 +12,15 @@ const https = require("https");
 const fs = require("fs");
 
 // ============================================================
-// ✏️  CONFIG — Fill these in before running
+// CONFIG — All values set via Railway Environment Variables
 // ============================================================
 const CONFIG = {
-  DESTINATION_URL: process.env.DESTINATION_URL,
-  PROVIDER: "shortio",
-  PORT: process.env.PORT || 8080,
-  ROTATE_EVERY: parseInt(process.env.ROTATE_EVERY) || 3,
+  DESTINATION_URL: process.env.DESTINATION_URL,   // Your affiliate link
+  PORT: process.env.PORT || 8080,                 // Railway uses 8080
+  ROTATE_EVERY: parseInt(process.env.ROTATE_EVERY) || 3, // Clicks before rotating
   SHORTIO: {
-    API_KEY: process.env.SHORTIO_API_KEY,
-    DOMAIN: process.env.SHORTIO_DOMAIN,
+    API_KEY: process.env.SHORTIO_API_KEY,         // From Short.io dashboard
+    DOMAIN: process.env.SHORTIO_DOMAIN,           // e.g. rideonline.store
   },
 };
 // ============================================================
@@ -35,8 +32,7 @@ let state = {
   isGenerating: false,    // Prevents double-generation under traffic
 };
 
-// --- Shortener API functions ---
-
+// --- Short.io API call ---
 function createShortio(destination) {
   return apiRequest({
     hostname: "api.short.io",
@@ -53,7 +49,6 @@ function createShortio(destination) {
     extract: (data) => data.shortURL,
   });
 }
-
 
 // --- Generic HTTPS request helper ---
 function apiRequest({ hostname, path, method, headers, body, extract }) {
@@ -87,12 +82,13 @@ function apiRequest({ hostname, path, method, headers, body, extract }) {
   });
 }
 
-// --- Pick provider ---
+// --- Generate short link via Short.io ---
+// Appends a unique token so Short.io always creates a fresh link
 function generateShortLink(destination) {
-  switch (CONFIG.PROVIDER) {
-    case "shortio":    return createShortio(destination);
-    default: throw new Error("Unknown provider: " + CONFIG.PROVIDER);
-  }
+  const unique = Math.random().toString(36).slice(2, 8);
+  const separator = destination.includes("?") ? "&" : "?";
+  const uniqueDestination = destination + separator + "_r=" + unique;
+  return createShortio(uniqueDestination);
 }
 
 // --- Logger ---
@@ -162,7 +158,7 @@ server.listen(CONFIG.PORT, () => {
 ✅ Link Rotator running!
 🔗 Your master link: http://localhost:${CONFIG.PORT}
 📍 Destination:      ${CONFIG.DESTINATION_URL}
-🔀 Provider:         ${CONFIG.PROVIDER}
+🔀 Provider:         Short.io
 🔄 Rotates every:    ${CONFIG.ROTATE_EVERY} clicks
 📄 Clicks logged to: clicks.log
   `);
