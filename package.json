@@ -1,0 +1,10 @@
+{
+  "name": "link-rotator",
+  "version": "1.0.0",
+  "description": "Generates a fresh short link on every click to avoid affiliate link flagging",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {}
+}
