@@ -19,7 +19,7 @@ const fs = require("fs");
 const CONFIG = {
   DESTINATION_URL: process.env.DESTINATION_URL,
   PROVIDER: "shortio",
-  PORT: process.env.PORT || 3000,
+  PORT: process.env.PORT || 8080,
   ROTATE_EVERY: parseInt(process.env.ROTATE_EVERY) || 3,
   SHORTIO: {
     API_KEY: process.env.SHORTIO_API_KEY,
