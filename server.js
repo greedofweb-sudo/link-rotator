@@ -17,34 +17,13 @@ const fs = require("fs");
 // ✏️  CONFIG — Fill these in before running
 // ============================================================
 const CONFIG = {
-  // Your affiliate/destination URL (the link you want to hide)
-  DESTINATION_URL: "https://your-affiliate-link.com",
-
-  // Which shortener to use: "shortio" | "rebrandly" | "bitly"
+  DESTINATION_URL: process.env.DESTINATION_URL,
   PROVIDER: "shortio",
-
-  // Port your master link runs on (e.g. http://localhost:3000)
-  PORT: 3000,
-
-  // 🔄 How many clicks before generating a new short link
-  ROTATE_EVERY: 3,
-
-  // --- Short.io settings (https://short.io) ---
+  PORT: process.env.PORT || 3000,
+  ROTATE_EVERY: parseInt(process.env.ROTATE_EVERY) || 3,
   SHORTIO: {
-    API_KEY: "YOUR_SHORTIO_API_KEY",
-    DOMAIN: "YOUR_SHORTIO_DOMAIN", // e.g. "go.yourcustomdomain.com"
-  },
-
-  // --- Rebrandly settings (https://rebrandly.com) ---
-  REBRANDLY: {
-    API_KEY: "YOUR_REBRANDLY_API_KEY",
-    DOMAIN: "YOUR_REBRANDLY_DOMAIN", // e.g. "yourbrand.link"
-  },
-
-  // --- Bitly settings (https://bitly.com) ---
-  BITLY: {
-    API_KEY: "YOUR_BITLY_API_KEY",
-    GROUP_GUID: "YOUR_BITLY_GROUP_GUID", // Found in Bitly account settings
+    API_KEY: process.env.SHORTIO_API_KEY,
+    DOMAIN: process.env.SHORTIO_DOMAIN,
   },
 };
 // ============================================================
@@ -75,39 +54,6 @@ function createShortio(destination) {
   });
 }
 
-function createRebrandly(destination) {
-  return apiRequest({
-    hostname: "api.rebrandly.com",
-    path: "/v1/links",
-    method: "POST",
-    headers: {
-      apikey: CONFIG.REBRANDLY.API_KEY,
-      "content-type": "application/json",
-    },
-    body: {
-      destination: destination,
-      domain: { fullName: CONFIG.REBRANDLY.DOMAIN },
-    },
-    extract: (data) => `https://${data.shortURL}`,
-  });
-}
-
-function createBitly(destination) {
-  return apiRequest({
-    hostname: "api-ssl.bitly.com",
-    path: "/v4/shorten",
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${CONFIG.BITLY.API_KEY}`,
-      "Content-Type": "application/json",
-    },
-    body: {
-      long_url: destination,
-      group_guid: CONFIG.BITLY.GROUP_GUID,
-    },
-    extract: (data) => data.link,
-  });
-}
 
 // --- Generic HTTPS request helper ---
 function apiRequest({ hostname, path, method, headers, body, extract }) {
@@ -145,8 +91,6 @@ function apiRequest({ hostname, path, method, headers, body, extract }) {
 function generateShortLink(destination) {
   switch (CONFIG.PROVIDER) {
     case "shortio":    return createShortio(destination);
-    case "rebrandly":  return createRebrandly(destination);
-    case "bitly":      return createBitly(destination);
     default: throw new Error("Unknown provider: " + CONFIG.PROVIDER);
   }
 }
