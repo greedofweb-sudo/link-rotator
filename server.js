@@ -117,12 +117,7 @@ async function refreshShortLink() {
 
 // --- HTTP Server ---
 const server = http.createServer(async (req, res) => {
-  // Only handle the root path
-  if (req.url !== "/" && req.url !== "") {
-    res.writeHead(404);
-    res.end("Not found");
-    return;
-  }
+  // Handle any path — always redirect to current short link
 
   const ip = req.headers["x-forwarded-for"] || req.socket.remoteAddress;
 
